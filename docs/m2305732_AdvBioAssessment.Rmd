@@ -1,0 +1,340 @@
+---
+title: "Advanced Bioinformatics 2024 Assessment"
+author: "m2305732"
+date: "2024-03-20"
+output: html_document
+---
+
+### 3. R/RStudio Assessment
+```{r}
+### Set Working Directory
+setwd("C:/Users/alice/Documents/AdvancedBio/Assessment")
+```
+
+### Task 3.1
+```{r}
+# Show all the values between 5 and 55
+print(5:55)
+# Calculate the sum of all the intergers between 5 and 55
+sum(5:55)
+```
+
+### Task 3.2
+```{r}
+### Setup the sumfun function to include one input parameter (n)
+sumfun <- function(n) {sum(5:n)}   ### sum of all integers between 5 and n that is called within the sumfun function (10, 20 and 100).
+
+### Call sumfun for 10
+sumfun(10)
+
+### Call sumfun for 20
+sumfun(20)
+
+### Call sumfun for 100
+sumfun(100)
+```
+
+### Task 3.3
+```{r}
+### Establish a function to call Fibonacci and define the first two characters in our sequence (1, 1)
+Call_Fibonacci <- function(n) {
+  a <- 1
+  b <- 1
+  # Create for loop to loop through each sum in sequence
+  for (i in 1:n) {
+    print(a) ### Print the first character of our sequence (1)
+    next_number <- a + b  ### The next number in the sequence is the first character add the second character (1+1)
+    a <- b  ### The first character becomes the second character
+    b <- next_number ### The second character become our next_number variable which is the sum of the first and second character 
+  }
+}
+ 
+# Use our function to call the first 12 entries
+Call_Fibonacci(12)
+```
+
+### Task 3.4
+```{r, message=FALSE, results='hide', warning=FALSE}
+### Install & Load ggplot package
+install.packages("ggplot2", dependencies=TRUE, repos = "http://cran.us.r-project.org")
+library("ggplot2")
+```
+
+```{r}
+### Define data in "gear" column as factor so it can be categorised by R and plotted
+mtcars$gear <- as.factor(mtcars$gear)
+
+### Plot the data:
+ggplot(data=mtcars, aes(x=gear, y=mpg, fill=gear)) + 
+  geom_boxplot() +
+  ggtitle("Task 3.4: Box plot of miles per gallon against number of gears")
+```
+
+### Task 3.5
+```{r}
+### Fit Linear relationship using lm and call summary statistics using summary function
+summary(lm(dist ~ speed, data = cars))
+### To see what units are used
+?cars
+
+### Answers to the questions in Task 3.5:
+# Fitted Slope = 3.9324
+# Intercept = -17.5791
+# Standard Errors = 6.7584 & 0.4155
+# Unit used for Speed = Miles per Hour (mph) 
+# Unit used for Distance = Feet (ft)
+```
+
+### Task 3.6
+```{r}
+### Plot the data
+ggplot(cars, aes(x=speed, y=dist)) +
+  labs(title="Linear relationship between speed and breaking distance", x ="Speed (mph)", y = "Breaking Distance (ft)") +
+  geom_point() +
+geom_abline(slope = 3.9324, intercept = -17.5791)
+```
+
+### Task 3.7
+```{r}
+### First, convert distance from feet to miles
+dist_miles <- cars$dist*0.000189394
+
+### Convert speed to be proportional to distance
+speed_miles <- cars$speed^2
+
+### Calculate linear regression
+a <- lm(dist_miles ~ speed_miles, data = cars)
+coefficients(a)
+# Intercept = 1.678040e-03
+# Slope = 2.442589e-05
+
+### Average Reaction Time
+# Multiply the slope coefficient by 3600 to convert from miles per hour to seconds
+reaction_time <- 2.442589e-05*3600
+reaction_time
+# Answer = the average reaction time is 0.0879332
+
+### ggplot the data
+# Load the library
+library("ggplot2")
+
+# Plot the data
+ggplot(cars, aes(x=speed_miles, y=dist_miles)) +
+  labs(title="Relationship between speed and breaking distance", x ="Speed (mph)", y = "Breaking Distance (miles)") +
+  geom_point() +
+geom_abline(slope = 2.442589e-05, intercept = 1.678040e-03)
+```
+
+
+### RNA-seq assessment
+### Task 3.8
+```{r, message=FALSE, warning=FALSE}
+### Preparation
+# Set Working Directory
+setwd("C:/Users/alice/Documents/AdvancedBio/LMS_RNAseq_short-master-2023-final/LMS_RNAseq_short-master-2023-final/course/exercises")
+
+### Install & Load DESeq2 packages
+# Install Bioconductor
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install(version = "3.18")
+# Install DESeq2
+BiocManager::install("DESeq2")
+library("DESeq2")
+```
+
+```{r}
+### Read in Count data
+count_data <- read.csv(file = "C:/Users/alice/Documents/AdvancedBio/LMS_RNAseq_short-master-2023-final/LMS_RNAseq_short-master-2023-final/course/exercises/data/exercise1_counts.csv", header = T, row.names = 1)
+
+### Read in Sample description
+sample_des <- read.csv(file = "C:/Users/alice/Documents/AdvancedBio/LMS_RNAseq_short-master-2023-final/LMS_RNAseq_short-master-2023-final/course/exercises/data/exercise1_sample_description.info", sep = "\t", header = T)
+```
+
+### Task 3.9
+```{r}
+### Create col_data from sample description
+col_data <- data.frame(Sample = sample_des$sample,
+                       Condition = sample_des$condition,
+                       Batch = sample_des$batch)
+
+### Check dimensions with count matrix
+all(colnames(count_data) == col_data$name)
+```
+
+### Task 3.10
+```{r}
+# Prepare for DESeq: Store data as factors
+col_data$Sample <- as.factor(col_data$Sample)
+col_data$Condition <- as.factor(col_data$Condition)
+col_data$Batch <- as.factor(col_data$Batch)
+
+# Build DESeq dataset
+dds <- DESeqDataSetFromMatrix(countData = count_data, 
+                              colData = col_data, 
+                              design = ~Condition)
+# Apply DESeq normalization
+dds <- DESeq(dds)
+```
+
+### Task 3.11
+```{r}
+### rlog transformation
+# Transformation of our raw counts based on a log2 scale for downstream analysis
+rld <- rlog(dds)
+
+### VST transformation
+# Also transforms data on log2 scale but is faster than rlog and used for larger datasets
+vst <- varianceStabilizingTransformation(dds)
+```
+
+### Task 3.12
+```{r, warning=FALSE, results='hide', message=FALSE}
+### Load package
+install.packages("pheatmap", repos = "http://cran.us.r-project.org")
+library("pheatmap")
+
+```
+
+```{r}
+# Normalise counts in dds data
+dds_counts <- counts(dds, normalized = TRUE)
+
+# Get the top 40 highly expressed genes
+select <- order(rowMeans(dds_counts), decreasing = TRUE)[1:40]
+
+### Plot rld dataset
+pheatmap(assay(rld)[select, ])
+
+### Plot VST dataset
+pheatmap(assay(vst)[select, ])
+```
+
+
+### Task 3.13
+```{r}
+# Generate SDM using rlog transformed count data
+sample_dist <- dist(t(assay(rld)))
+# Convert SDM to matrix form
+sdm <- as.matrix(sample_dist)
+
+# Load library
+library("RColorBrewer")
+# Define Row names
+rownames(sdm) <- rld$Group
+colnames(sdm) <- NULL
+# Add colors
+colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
+# Plot heatmap
+pheatmap(sdm,
+         clustering_distance_rows = sample_dist,
+         clustering_distance_cols = sample_dist,
+         col = colors)
+```
+
+### Task 3.14
+```{r}
+# PCA plot of rld dataset
+plotPCA(rld, intgroup = "Condition")
+
+### Answers: % significance values of first two principal components
+# Principle Component 1 shows a 70% variance between group FFa and groups KOa and KOb.
+# Principle Component 2 shows a 13% variance between the lowest clustering of samples in group KOb and the highest sample cluster in group KOa.
+### Principle component 1 highlights the largest variance in our groups accounting for 70% of the total variance, while principle component 2 shows the lowest level of variance between groups as 13%.
+```
+
+### Task 3.15
+```{r}
+# PCA plot of VST dataset
+plotPCA(vst, intgroup = "Condition")
+
+### In comparison of the two plots there is only a difference of 1% variance for both principle components, decreasing from 70% to 69% for principle component 1 and increasing from 13% to 14% for principle component 2. Suggesting the transformation of our data using either rlog or VST methods does not drastically alter the dimensions of the PCA. 
+```
+
+
+### ChIP-seq assessment
+### Task 3.16
+```{r, message=FALSE, warning=FALSE}
+### Set Working Directory
+setwd("C:/Users/alice/Documents/AdvancedBio/LMS_ChIPseq_short-master-2023-final/LMS_ChIPseq_short-master-2023-final/course")
+
+### Load Packages
+library(GenomicRanges)
+BiocManager::install("rtracklayer")
+library(rtracklayer)
+```
+
+```{r}
+### Read in the data
+melPeakRep1_DF <- read.delim("C:/Users/alice/Documents/AdvancedBio/LMS_ChIPseq_short-master-2023-final/LMS_ChIPseq_short-master-2023-final/course/data/MacsPeaks/mycmelrep1_peaks.xls",sep="\t",comment.char = "#")
+
+melPeakRep2_DF <- read.delim("C:/Users/alice/Documents/AdvancedBio/LMS_ChIPseq_short-master-2023-final/LMS_ChIPseq_short-master-2023-final/course/data/MacsPeaks/mycmelrep2_peaks.xls",sep="\t",comment.char = "#")
+
+
+### Convert rep1 data to GRanges object
+melRep1_GR <- GRanges(
+  seqnames=melPeakRep1_DF[,"chr"],
+  IRanges(melPeakRep1_DF[,"start"],
+  melPeakRep1_DF[,"end"]))
+
+### Convert rep2 data to GRanges object
+melRep2_GR <- GRanges(
+  seqnames=melPeakRep2_DF[,"chr"],
+  IRanges(melPeakRep2_DF[,"start"],
+  melPeakRep2_DF[,"end"]))
+
+### Add summit position and fold enrichment
+
+mcols(melRep1_GR) <- melPeakRep1_DF[,c("abs_summit", "fold_enrichment")]
+head(melRep1_GR)
+
+mcols(melRep2_GR) <- melPeakRep2_DF[,c("abs_summit", "fold_enrichment")]
+head(melRep2_GR)
+
+### Create a common peakset
+commonMelPeaks <- melRep1_GR[melRep1_GR %over% melRep2_GR]
+length(commonMelPeaks)
+```
+
+### Task 3.17
+```{r}
+### Select the top 500 peaks
+Top500 <- commonMelPeaks[1:500]
+length(Top500)
+
+### Resize the top 500 peaks to 200bp around centre
+Top500commonpeaksresized <- resize(Top500,200,fix="center")
+```
+
+### Task 3.18
+```{r, message=FALSE, warning=FALSE, results='hide'}
+### Load required packages
+BiocManager::install("BSgenome")
+BiocManager::install("BSgenome.Mmusculus.UCSC.mm9")
+library(BSgenome)
+library(BSgenome.Mmusculus.UCSC.mm9)
+```
+
+```{r}
+### Define genome being used and ensure chromosome names match those in UCSC
+genome <- BSgenome.Mmusculus.UCSC.mm9
+seqlevelsStyle(Top500commonpeaksresized) <- "UCSC"
+
+### Extract sequences underneath the peaks
+commonPeaksSequences <- getSeq(genome,GRanges(Top500commonpeaksresized))
+names(commonPeaksSequences) <- paste0("peak_",seqnames(Top500commonpeaksresized),"_",
+                                         start(Top500commonpeaksresized),"-",
+                                         end(Top500commonpeaksresized))
+### Check extraction was successful
+commonPeaksSequences[1:2,]
+
+### Write to a FASTA file
+writeXStringSet(commonPeaksSequences,file="m2305732consensusPeaks.fa")
+```
+
+### Task 3.19
+```{r}
+### Meme-ChIP results can be found at the following URL: "https://meme-suite.org/meme//opal-jobs/appMEMECHIP_5.5.51712148706463-1023344350/meme-chip.html"
+```
+
+
