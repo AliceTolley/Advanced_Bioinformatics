@@ -1,5 +1,5 @@
-# Advanced_Bioinformatics
-Masters in Genomic Medicine: Advanced Bioinformatics
+# Masters in Genomic Medicine: Advanced Bioinformatics
+### Documentation of the two programming languages Bash and R used to analyse genomic data 
 
 Bash: Within a linux-shell under King's College London HPC's, I created an automatic NGS pipeline calling variants within whole-exome sequencing data.
 
